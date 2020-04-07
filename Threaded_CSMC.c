@@ -17,6 +17,7 @@ int **priorities;
 int newStudentInQueue;
 /// comment1
 // comment 2
+// comment 3
 void *notifyCoordinator();
 void *student()
 {
