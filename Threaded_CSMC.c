@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     //Creates student threads
     for(i = 0; i < numberOfStudents; i++)
      {
-         assert(pthread_create(&students[i], NULL, student, (int *) i) == 0);
+         assert(pthread_create(&students[i], NULL, student, (void *) i) == 0);
      }
     /*
     //Creates tutor threads
