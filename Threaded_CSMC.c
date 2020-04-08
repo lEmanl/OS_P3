@@ -23,24 +23,32 @@ struct StudentQueue {
 
 
 // GLOBAL VARIABLES
-sem_t mutexChairs = 1;
-sem_t mutexArrivedStudentQ = 1;
-sem_t mutexWaitingStudentQ = 1;
+sem_t mutexChairs;
+sem_t mutexArrivedStudentQ;
+sem_t mutexWaitingStudentQ;
 
-sem_t coordinatorWaiting = 0;
-sem_t tutorWaiting = 0;
-
-int **studentIDQueue;
-int **priorities;
-int newStudentInQueue;
-
+sem_t coordinatorWaiting;
+sem_t tutorWaiting;
+int numberOfChairs;
 
 
 
 //  STUDENT THREAD
-void *student()
+int *student()
 {
-
+  //Student tries to enter the waiting room (SXS170005)
+  sem_wait(&mutexChairs);
+  if (numberOfChairs < 0)
+  {
+     sem_post(&mutexChairs);
+     return 0; 
+  }
+  //Decrement number of chairs in the waiting room by 1 (SXS170005)
+  numberOfChairs = numberOfChairs - 1;
+  sem_post(&mutexChairs);
+  sem_post(&coordinatorWaiting);
+  //Add student id to the queue
+  sem_wait(&mutexArrivedStudentQ);
 }
 
 
@@ -49,6 +57,7 @@ void *student()
 //  COORDINATOR THREAD
 void *coordinator()
 {
+  //sem_wait(coordinatorWaiting);
 
 }
 
@@ -75,7 +84,6 @@ int main(int argc, char *argv[])
     //  LOCALS
     int numberOfStudents;
     int numberOfTutors;
-    int numberOfChairs;
     int numberOfHelp;
     long i;
 
@@ -88,11 +96,6 @@ int main(int argc, char *argv[])
     //  ALLOCATE THREADS
     students = malloc(sizeof(pthread_t) * numberOfStudents);
     tutors = malloc(sizeof(pthread_t) * numberOfTutors);
-
-    //  ALLOCATE DATA
-    studentIDQueue = malloc(1000 * sizeof(int*));
-    priorities = malloc(1000 * sizeof(int*));
-    newStudentInQueue = 0;
 
     //  INITIALIZE SEMAPHORES
     sem_init(&mutexChairs, 0, 1);
