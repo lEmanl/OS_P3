@@ -34,14 +34,14 @@ int numberOfChairs;
 
 
 //  STUDENT THREAD
-int *student()
+void *student()
 {
   //Student tries to enter the waiting room (SXS170005)
   sem_wait(&mutexChairs);
   if (numberOfChairs < 0)
   {
      sem_post(&mutexChairs);
-     return 0; 
+     return; 
   }
   //Decrement number of chairs in the waiting room by 1 (SXS170005)
   numberOfChairs = numberOfChairs - 1;
@@ -104,14 +104,11 @@ int main(int argc, char *argv[])
     sem_init(&coordinatorWaiting, 0, 0);
     sem_init(&tutorWaiting, 0, 0);
 
-
     //Creates student threads
     for(i = 0; i < numberOfStudents; i++)
-    {
-        //  returns thread id
-        assert(pthread_create(&students[i], NULL, student, (void *) i) == 0);
-    }
-
+     {
+         assert(pthread_create(&students[i], NULL, student, (int *) i) == 0);
+     }
     /*
     //Creates tutor threads
     for(i = 0; i < numOfTutors; i++) 
