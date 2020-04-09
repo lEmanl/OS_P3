@@ -39,6 +39,7 @@ void enqueueToStudentWaitingQueue(struct StudentWaiting * studentWaitingToQueue)
     
     //  if the queue is empty
     if(studentWaitingQueueHead == NULL) {
+        printf("Q is empty\n");
         studentWaitingToQueue->next = NULL;
         studentWaitingQueueHead = studentWaitingToQueue;
 
@@ -57,10 +58,12 @@ void enqueueToStudentWaitingQueue(struct StudentWaiting * studentWaitingToQueue)
 
         //  if the previous student is NULL, then insert before the head
         if(previousTraversalStudentWaiting == NULL) {
+            printf("Q insert before head\n");
             studentWaitingToQueue->next = studentWaitingQueueHead;
             studentWaitingQueueHead = studentWaitingToQueue;        
         //  insert between the traversal and previous node
         } else {
+            printf("Q insert between traversal and previous\n");
             studentWaitingToQueue->next = traversalStudentWaiting;
             previousTraversalStudentWaiting->next = studentWaitingToQueue;
         }
@@ -77,8 +80,8 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
         printf("queue empty\n");
     //  if the head is the only item in the list
     } else if(studentWaitingQueueHead->next == NULL) {
-        studentWaitingQueueHead = NULL;
         dequeuedStudent = traversalStudentWaiting;
+        studentWaitingQueueHead = NULL;
     //  if there are only 2 items in the list
     } else if(studentWaitingQueueHead->next->next == NULL) {
         dequeuedStudent = studentWaitingQueueHead->next;
@@ -122,26 +125,26 @@ int main(int argc, char *argv[])
     enqueueToStudentWaitingQueue(&s1);
     enqueueToStudentWaitingQueue(&s2);
 
-    printStudentWaitingQueue();
+    // printStudentWaitingQueue();
 
-    printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
+    // printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
 
-    printStudentWaitingQueue();
+    // printStudentWaitingQueue();
 
-    printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
+    // printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
 
-    enqueueToStudentWaitingQueue(&s4);
+    // enqueueToStudentWaitingQueue(&s4);
 
-    printStudentWaitingQueue();
+    // printStudentWaitingQueue();
 
 
-    printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
+    // printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
 
-    printStudentWaitingQueue();
+    // printStudentWaitingQueue();
 
-    printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
+    // printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
 
-    printStudentWaitingQueue();
+    // printStudentWaitingQueue();
 
-    dequeueFromStudentWaitingQueue();
+    // dequeueFromStudentWaitingQueue();
 }
