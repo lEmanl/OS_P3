@@ -18,22 +18,24 @@ struct StudentNode {
     struct StudentNode * next;
 };
 
-struct StudentWaitingQueue {
+struct StudentWaiting {
     sem_t studentWaiting;
+    int priority;
     struct StudentWaitingQueue * next;
 };
 
 
-
 // GLOBAL VARIABLES
 struct StudentNode * allStudentsHead;
-struct StudentWaitingQueue * studentWaitingQueueHead;
-struct StudentWaitingQueue * studentWaitingQueueTail;
+struct StudentWaiting * studentWaitingQueueHead;
+struct StudentWaiting * studentWaitingQueueTail;
 
 sem_t mutexChairs;
 sem_t mutexStudentToQueue;
+sem_t mutexStudentWaitingQueue;
 
 sem_t coordinatorWaiting;
+sem_t studentArrived;
 sem_t receivedStudentToQueue;
 sem_t tutorWaiting;
 
@@ -48,6 +50,9 @@ int studentToQueue;
  ***************************/
 
 
+//  STUDENT PRIORITY DATA STRUCTURE
+
+
 //  ADD TO ALL STUDENTS
 void addToAllStudents(struct StudentNode * studentToAdd) {
     //  if list is not empty, set new node next to head for insertion at front
@@ -59,16 +64,42 @@ void addToAllStudents(struct StudentNode * studentToAdd) {
 }
 
 
-//  FIND PRIORITY OF STUDENT WITH ID
-int findPriorityOfSTudent(int studentId) {
-    return 1;
+//  STUDENT WAITING QUEUEU DATA STRUCTURE
+
+
+//  ENQUEUE STUDENT WAITING QUEUE
+void enqueueToStudentWaitingQueue(struct StudentWaiting * studentWaitingToQueue) {
+    struct StudentWaiting * traversalStudentWaiting = studentWaitingQueueHead;
+    
+    //  if the queue is empty
+    if(studentWaitingQueueHead == NULL) {
+        studentWaitingToQueue->next = studentWaitingQueueTail;
+        studentWaitingQueueHead = studentWaitingToQueue;
+    //  if the queue is not empty
+    } else {
+        //  if the student has the highest priority
+        if(studentWaitingQueueTail->priority > studentWaitingToQueue->priority) {
+            studentWaitingToQueue->next = traversalStudentWaiting;
+                traversalStudentWaiting = studentWaitingToQueue;
+        }
+
+        while(traversalStudentWaiting != NULL) {
+            if(traversalStudentWaiting->priority <= studentWaitingToQueue->priority) {
+                studentWaitingToQueue->next = traversalStudentWaiting;
+                traversalStudentWaiting = studentWaitingToQueue;
+                traversalStudentWaiting = NULL;
+            } else {
+                traversalStudentWaiting = traversalStudentWaiting->next;
+            }
+        }
+    }
 }
 
 
+//  DEQUEUE STUDENT WAITING QUEUE
+struct StudentWaiting * dequeueFromStudentWaitingQueue() {
 
-
-//  ENQUEUE
-//  DEQUEUE
+}
 
 
 
@@ -82,54 +113,81 @@ int findPriorityOfSTudent(int studentId) {
 void * student()
 {
     int studentId = pthread_self();
-
     printf("Student Id %d", studentId);
 
-    // //  Tries to enter waiting room
-    // sem_wait(&mutexChairs);
-    // if (numberOfChairs < 0)
-    // {
-    //     sem_post(&mutexChairs);
-    //     return; 
-    // }
-    // numberOfChairs = numberOfChairs - 1;
+    //  LOCK to try and enter waiting room
+    sem_wait(&mutexChairs);
+    if (numberOfChairs < 0)
+    {
+        sem_post(&mutexChairs);
+        return; 
+    }
+    numberOfChairs = numberOfChairs - 1;
+    sem_post(&mutexChairs);
 
-    // //  Set student to queue
-    // sem_wait(&mutexStudentToQueue);
-    // studentToQueue = studentId;
-    // sem_post(&mutexStudentToQueue);
 
-    // sem_post(&coordinatorWaiting);
-    // sem_wait(&receivedStudentToQueue);
-    // sem_post(&mutexChairs);
+    //  LOCK on sharing student arrival
+    sem_wait(&studentArrived);
+    //  LOCK on student to queue
+    sem_wait(&mutexStudentToQueue);
+    studentToQueue = studentId;
+    sem_post(&mutexStudentToQueue);
+    //  NOTIFIES coordinator that student arrived
+    sem_post(&coordinatorWaiting);
+    //  WAITING for coordinator to queue student
+    sem_wait(&receivedStudentToQueue);
+    sem_post(&studentArrived);
 
-    // //  Wait for tutor
-    // //  sem_wait();
+    //  Wait for tutor
+    //  sem_wait();
 
-    // //  Leave waiting room
-    // sem_wait(&mutexChairs);
-    // numberOfChairs = numberOfChairs + 1;
-    // sem_post(&mutexChairs);
+    //  LOCK on waiting room chairs
+    sem_wait(&mutexChairs);
+    numberOfChairs = numberOfChairs + 1;
+    sem_post(&mutexChairs);
 
-    // //  Get tutored
+    //  Get tutored
 
-    // //  Change priority
+    //  Change priority
 }
 
 
 //  COORDINATOR THREAD
 void *coordinator()
 {
-  // Waiting for student
-  //sem_wait(coordinatorWaiting);
+    //  WAITING for student to arrive
+    sem_wait(&coordinatorWaiting);
 
+    //  LOCK on the student to queue
+    sem_wait(&mutexStudentToQueue);
+    //      receives student to queue semaphore
+    sem_post(&mutexStudentToQueue);
+
+    //  NOTIFIES student that they were queued
+    sem_post(&receivedStudentToQueue);
+
+    //  LOCK on the queue of students
+    sem_wait(&mutexStudentWaitingQueue);
+    //      enqueues the arrived student
+    sem_post(&mutexStudentWaitingQueue);
+
+    //  NOTIFIES tutors that there is another student to tutor
+    sem_post(&tutorWaiting);
 }
 
 
 //  TUTOR THREAD
 void *tutor()
 {
+    //  WAITING for student to tutor
+    sem_wait(&tutorWaiting);
 
+    //  LOCK on the queue of students
+    sem_wait(&mutexStudentWaitingQueue);
+    //      dequeue and receive student
+    sem_wait(&mutexStudentWaitingQueue);
+
+    //  Tutor student
 }
 
 
