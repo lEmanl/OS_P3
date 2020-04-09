@@ -1,3 +1,4 @@
+//gcc MyProgram.c -o MyProgram -lpthread
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -120,7 +121,7 @@ void * student()
 void *coordinator()
 {
   // Waiting for student
-  sem_wait(coordinatorWaiting);
+  //sem_wait(coordinatorWaiting);
 
 }
 
@@ -162,7 +163,6 @@ int main(int argc, char *argv[])
     // arrivedStudentQueue = malloc(numberOfStudents * sizeof *arrivedStudentQueue);   
     // waitingStudentQueue = malloc(numberOfStudents * sizeof *waitingStudentQueue);      
     //  INITIALIZE SEMAPHORES
-    
     
     sem_init(&mutexChairs, 0, 1);
     sem_init(&mutexStudentToQueue, 0, 1);
