@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
     struct StudentWaiting s3;
     s3.priority = 8;
     struct StudentWaiting s4;
-    s3.priority = 1;
+    s4.priority = 1;
 
     enqueueToStudentWaitingQueue(&s3);
     enqueueToStudentWaitingQueue(&s1);
