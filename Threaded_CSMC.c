@@ -17,7 +17,7 @@ struct StudentNode {
 
 struct StudentQueue {
     struct StudentNode * student;
-    struct StudentNode * nextStudent;
+    struct StudentQueue * nextStudent;
 };
 
 
@@ -30,7 +30,8 @@ sem_t mutexWaitingStudentQ;
 sem_t coordinatorWaiting;
 sem_t tutorWaiting;
 int numberOfChairs;
-
+struct StudentQueue* arrivedStudentQueue;
+struct StudentQueue* waitingStudentQueue;
 
 
 //  STUDENT THREAD
@@ -48,7 +49,15 @@ void *student()
   sem_post(&mutexChairs);
   sem_post(&coordinatorWaiting);
   //Add student id to the queue
+  StudentQueue *student;
+  int increment = 0;
+  while (student != NULL)
+  {
+             
+  }
+  *arrivingStudentQueue[increment].id = 0;
   sem_wait(&mutexArrivedStudentQ);
+    
 }
 
 
@@ -96,7 +105,9 @@ int main(int argc, char *argv[])
     //  ALLOCATE THREADS
     students = malloc(sizeof(pthread_t) * numberOfStudents);
     tutors = malloc(sizeof(pthread_t) * numberOfTutors);
-
+    //ALLOCATE STUDENTS QUEUES
+    arrivedStudentQueue = malloc(numberOfStudents * sizeof *arrivedStudentQueue);   
+    waitingStudentQueue = malloc(numberOfStudents * sizeof *waitingStudentQueue);      
     //  INITIALIZE SEMAPHORES
     sem_init(&mutexChairs, 0, 1);
     sem_init(&mutexArrivedStudentQ, 0, 1);
