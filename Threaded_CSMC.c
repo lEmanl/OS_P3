@@ -158,7 +158,12 @@ int main(int argc, char *argv[])
     students = malloc(sizeof(pthread_t) * numberOfStudents);
     tutors = malloc(sizeof(pthread_t) * numberOfTutors);
 
+    // //ALLOCATE STUDENTS QUEUES
+    // arrivedStudentQueue = malloc(numberOfStudents * sizeof *arrivedStudentQueue);   
+    // waitingStudentQueue = malloc(numberOfStudents * sizeof *waitingStudentQueue);      
     //  INITIALIZE SEMAPHORES
+    
+    
     sem_init(&mutexChairs, 0, 1);
     sem_init(&mutexStudentToQueue, 0, 1);
     sem_init(&coordinatorWaiting, 0, 0);
