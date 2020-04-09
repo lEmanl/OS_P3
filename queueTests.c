@@ -80,10 +80,12 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
         printf("queue empty\n");
     //  if the head is the only item in the list
     } else if(studentWaitingQueueHead->next == NULL) {
-        dequeuedStudent = traversalStudentWaiting;
+        printf("head is the only item\n");
+        dequeuedStudent = studentWaitingQueueHead;
         studentWaitingQueueHead = NULL;
     //  if there are only 2 items in the list
     } else if(studentWaitingQueueHead->next->next == NULL) {
+        printf("there are only 2 items\n");
         dequeuedStudent = studentWaitingQueueHead->next;
         studentWaitingQueueHead->next = NULL;
     //  if the queue is not empty
@@ -92,6 +94,7 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
             traversalStudentWaiting = traversalStudentWaiting->next;
         }
 
+        printf("queue is not empty\n");
         dequeuedStudent = traversalStudentWaiting->next;
         traversalStudentWaiting->next = NULL;
     }
@@ -125,13 +128,13 @@ int main(int argc, char *argv[])
     enqueueToStudentWaitingQueue(&s1);
     enqueueToStudentWaitingQueue(&s2);
 
-    // printStudentWaitingQueue();
+    printStudentWaitingQueue();
 
-    // printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
+    printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
 
-    // printStudentWaitingQueue();
+    printStudentWaitingQueue();
 
-    // printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
+    printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
 
     // enqueueToStudentWaitingQueue(&s4);
 
