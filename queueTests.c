@@ -136,18 +136,18 @@ int main(int argc, char *argv[])
 
     printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
 
-    // enqueueToStudentWaitingQueue(&s4);
+    enqueueToStudentWaitingQueue(&s4);
 
-    // printStudentWaitingQueue();
+    printStudentWaitingQueue();
 
 
-    // printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
+    printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
 
-    // printStudentWaitingQueue();
+    printStudentWaitingQueue();
 
-    // printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
+    printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
 
-    // printStudentWaitingQueue();
+    printStudentWaitingQueue();
 
-    // dequeueFromStudentWaitingQueue();
+    dequeueFromStudentWaitingQueue();
 }
