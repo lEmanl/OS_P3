@@ -130,12 +130,12 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
     //  if the head is the only item in the list
     } else if(studentWaitingQueueHead->next == NULL) {
         dequeuedStudent = studentWaitingQueueHead;
-        free(studentWaitingQueueHead);
+        //free(studentWaitingQueueHead);
         studentWaitingQueueHead = NULL;
     //  if there are only 2 items in the list
     } else if(studentWaitingQueueHead->next->next == NULL) {
         dequeuedStudent = studentWaitingQueueHead->next;
-        free(studentWaitingQueueHead->next);
+        //free(studentWaitingQueueHead->next);
         studentWaitingQueueHead->next = NULL;
     //  if the queue is not empty
     } else {
@@ -145,7 +145,7 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
 
         dequeuedStudent = traversalStudentWaiting->next;
 
-        free(traversalStudentWaiting->next);
+        //free(traversalStudentWaiting->next);
         traversalStudentWaiting->next = NULL;
     }
 
@@ -253,7 +253,8 @@ void *coordinatorThread()
 //  TUTOR THREAD
 void *tutorThread()
 {
-    struct StudentWaiting * studentWaiting;
+    struct StudentWaiting * studentWaitingNode;
+    sem_t studentWaiting;
 
     //  WAITING for student to tutor
     printf("Tutor: waiting for coordinator\n");
@@ -262,15 +263,14 @@ void *tutorThread()
     //  LOCK on the queue of students
     sem_wait(&mutexStudentWaitingQueue);
     printf("Tutor: dequeueing student\n");
-    studentWaiting = dequeueFromStudentWaitingQueue();
-    if(studentWaiting->studentWaiting == NULL) {
-        printf("Tutor: dequeueing student is NULL\n");
-    }
+    studentWaitingNode = dequeueFromStudentWaitingQueue();
+    studentWaiting = studentWaitingNode->studentWaiting;
+    free(studentWaitingNode);
     sem_post(&mutexStudentWaitingQueue);
 
     //  Tutor student
     printf("Tutor: tutoring student\n");
-    sem_post(studentWaiting->studentWaiting);
+    sem_post(studentWaiting);
 }
 
 
