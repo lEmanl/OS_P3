@@ -213,34 +213,40 @@ void *coordinatorThread()
     struct StudentWaiting * nextStudentWaiting;
     struct StudentNode * nextStudentWaitingNode;
 
+    int count = 10;
+    int counter = 0;
 
-    //  WAITING for student to arrive
-    sem_wait(&coordinatorWaiting);
-    printf("Coordinator: waiting for student to arrive\n");
+    while(counter < count) {
+        //  WAITING for student to arrive
+        printf("Coordinator: waiting for student to arrive\n");
+        sem_wait(&coordinatorWaiting);
 
-    //  LOCK on the student to queue
-    sem_wait(&mutexStudentToQueue);
-    printf("Coordinator: getting student to queue\n");
-    nextStudentToQueue = studentToQueue;
-    sem_post(&mutexStudentToQueue);
+        //  LOCK on the student to queue
+        sem_wait(&mutexStudentToQueue);
+        printf("Coordinator: received student to queue\n");
+        nextStudentToQueue = studentToQueue;
+        sem_post(&mutexStudentToQueue);
 
-    //  NOTIFIES student that they were received
-    sem_post(&receivedStudentToQueue);
+        //  NOTIFIES student that they were received
+        sem_post(&receivedStudentToQueue);
 
-    nextStudentWaitingNode = findInAllStudents(nextStudentToQueue);
-    nextStudentWaiting = malloc(sizeof(struct StudentWaiting));
-    nextStudentWaiting->studentWaiting = nextStudentWaitingNode->studentWaiting;
-    nextStudentWaiting->priority = nextStudentWaitingNode->priority;
+        nextStudentWaitingNode = findInAllStudents(nextStudentToQueue);
+        nextStudentWaiting = malloc(sizeof(struct StudentWaiting));
+        nextStudentWaiting->studentWaiting = nextStudentWaitingNode->studentWaiting;
+        nextStudentWaiting->priority = nextStudentWaitingNode->priority;
 
-    //  LOCK on the queue of students
-    sem_wait(&mutexStudentWaitingQueue);
-    printf("Coordinator: queueing student\n");
-    enqueueToStudentWaitingQueue(nextStudentWaiting);
-    sem_post(&mutexStudentWaitingQueue);
+        //  LOCK on the queue of students
+        sem_wait(&mutexStudentWaitingQueue);
+        printf("Coordinator: queueing student\n");
+        enqueueToStudentWaitingQueue(nextStudentWaiting);
+        sem_post(&mutexStudentWaitingQueue);
 
-    //  NOTIFIES tutors that there is another student to tutor
-    printf("Coordinator: notifying tutor\n");
-    sem_post(&tutorWaiting);
+        //  NOTIFIES tutors that there is another student to tutor
+        printf("Coordinator: notifying tutor\n");
+        sem_post(&tutorWaiting);
+
+        counter = counter + 1;
+    }
 }
 
 
