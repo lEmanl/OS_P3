@@ -127,7 +127,7 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
 
     //  if the queue is empty
     if(studentWaitingQueueHead == NULL) {
-        printf("queue empty\n");
+        //printf("queue empty\n");
     //  if the head is the only item in the list
     } else if(studentWaitingQueueHead->next == NULL) {
         dequeuedStudent = studentWaitingQueueHead;
@@ -171,12 +171,12 @@ void * studentThread(void * arg)
     sem_wait(&mutexChairs);
     if (numberOfChairs < 0)
     {
-        printf("St: Student %d found no empty chairs. Will try again later.\n", studentThreadId);
+        printf("St: Student %ul found no empty chairs. Will try again later.\n", studentThreadId);
         sem_post(&mutexChairs);
         return; 
     }
     numberOfChairs = numberOfChairs - 1;
-    printf("St: Student %d takes a seat. Empty chairs = %d\n", studentThreadId, numberOfChairs);
+    printf("St: Student %ul takes a seat. Empty chairs = %d\n", studentThreadId, numberOfChairs);
     sem_post(&mutexChairs);
 
 
@@ -240,8 +240,8 @@ void *coordinatorThread()
 
         //  LOCK on the queue of students
         sem_wait(&mutexStudentWaitingQueue);
-        printf("Coordinator: queueing student\n");
         enqueueToStudentWaitingQueue(nextStudentWaiting);
+        printf("Co: Student %ul with priority %d in the queue. Waiting students now = %d. Total requests = %d\n", nextStudentToQueue, nextStudentWaiting->priority, 0, 0);
         sem_post(&mutexStudentWaitingQueue);
 
         //  NOTIFIES tutors that there is another student to tutor
