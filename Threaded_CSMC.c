@@ -209,7 +209,7 @@ void * studentThread(void * arg)
         sem_post(&mutexChairs);
 
         // Student is getting tutored
-        sleep(.2); 
+        sleep(2); 
 
         // Increment student priotiy
         studentNode->priority = studentNode->priority + 1;
@@ -298,7 +298,7 @@ void tutor(struct StudentNode * studentNode)
     amountOfStudentsBeingTutored = amountOfStudentsBeingTutored + 1;
     sem_post(&mutexAmountOfStudentBeingTutored);
 
-    sleep(.2);  
+    sleep(2);  
 
     printf("Tu: Student %ul tutored by Tutor %ul. Students tutored now = %d. Total session tutored = %d.\n", studentNode->threadId, studentNode->tutorThreadId, amountOfStudentsBeingTutored, totalStudentsTutored);
 
