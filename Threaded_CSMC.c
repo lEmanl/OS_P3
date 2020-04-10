@@ -280,7 +280,7 @@ int main(int argc, char *argv[])
     for(i = 0; i < numberOfStudents; i++)
     {
         assert(pthread_create(&students[i], NULL, student, (void *) i) == 0);
-        printf("Thread Id %d\n", *students[i]);
+        printf("Thread Id %d\n", students[i]);
     }
 
     //Join student threads
