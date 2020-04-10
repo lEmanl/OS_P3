@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <pthread.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <semaphore.h>
 
 
@@ -158,8 +159,9 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
 //  STUDENT THREAD
 void * student()
 {
-    int studentId = pthread_self();
-    printf("Student Id %d\n", studentId);
+    //pid_t threadId = gettid();
+
+    printf("Student Id %d\n", pthread_self());//threadId);
 
     // //  LOCK to try and enter waiting room
     // sem_wait(&mutexChairs);
@@ -278,7 +280,7 @@ int main(int argc, char *argv[])
     for(i = 0; i < numberOfStudents; i++)
     {
         assert(pthread_create(&students[i], NULL, student, (void *) i) == 0);
-        printf("Thread Id %d\n", &students[i]);
+        printf("Thread Id %d\n", *students[i]);
     }
 
     //Join student threads
