@@ -211,6 +211,7 @@ void *coordinatorThread()
 {
     pthread_t nextStudentToQueue;
     struct StudentNode * nextStudentNode;
+    struct StudentWaiting * nextStudentWaiting;
 
     int count = 10;
     int counter = 0;
@@ -223,17 +224,17 @@ void *coordinatorThread()
         sem_wait(&mutexStudentToQueue);
         printf("Coordinator: received student to queue\n");
         nextStudentToQueue = studentToQueue;
-	
         sem_post(&mutexStudentToQueue);
 
         //  NOTIFIES student that they were received
         sem_post(&receivedStudentToQueue);
-
         nextStudentNode = findInAllStudents(nextStudentToQueue);
 
         //  LOCK on the queue of students
         sem_wait(&mutexStudentWaitingQueue);
-        enqueueToStudentWaitingQueue(nextStudentNode);
+        nextStudentWaiting = malloc(sizeof(struct StudentWaiting *));
+        nextStudentWaiting->student = nextStudentNode;
+        enqueueToStudentWaitingQueue(nextStudentWaiting);
         printf("Co: Student %ul with priority %d in the queue. Waiting students now = %d. Total requests = %d\n", nextStudentToQueue, nextStudentNode->priority, 0, 0);
         sem_post(&mutexStudentWaitingQueue);
         
@@ -261,7 +262,7 @@ void *tutorThread()
     //  LOCK on the queue of students
     sem_wait(&mutexStudentWaitingQueue);
     printf("Tutor: dequeueing student\n");
-    studentNode = dequeueFromStudentWaitingQueue();
+    studentNode = dequeueFromStudentWaitingQueue()->student;
     sem_post(&mutexStudentWaitingQueue);
 
     //  set the tutor for the student
