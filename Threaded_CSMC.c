@@ -40,6 +40,7 @@ sem_t receivedStudentToQueue;
 sem_t tutorWaiting;
 
 int numberOfChairs;
+int totalStudentsTutored;
 pthread_t studentToQueue;
 
 
@@ -164,16 +165,18 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
 void * studentThread(void * arg)
 {
     sem_t * studentWaiting = (sem_t *) arg;
+    pthread_t studentThreadId = pthread_self();
 
     //  LOCK to try and enter waiting room
     sem_wait(&mutexChairs);
     if (numberOfChairs < 0)
     {
+        printf("St: Student %d found no empty chairs. Will try again later.\n", studentThreadId);
         sem_post(&mutexChairs);
         return; 
     }
-    printf("Student: entering waiting room\n");
     numberOfChairs = numberOfChairs - 1;
+    printf("St: Student %d takes a seat. Empty chairs = %d\n", studentThreadId, numberOfChairs);
     sem_post(&mutexChairs);
 
 
@@ -182,7 +185,7 @@ void * studentThread(void * arg)
     //  LOCK on student to queue
     sem_wait(&mutexStudentToQueue);
     printf("Student: setting student to queue\n");
-    studentToQueue = pthread_self();
+    studentToQueue = studentThreadId;
     sem_post(&mutexStudentToQueue);
     //  NOTIFIES coordinator that student arrived
     sem_post(&coordinatorWaiting);
