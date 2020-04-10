@@ -1,4 +1,4 @@
-//gcc Threaded_CSMC.c -o Threaded_CSMC -lpthread
+//gcc CSMC.c -o CSMC -lpthread
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -180,7 +180,7 @@ void * studentThread(void * arg)
         }
 
         numberOfChairs = numberOfChairs - 1;
-        //printf("St: Student %ul takes a seat. Empty chairs = %d\n", pthread_self(), numberOfChairs);
+        printf("St: Student %ul takes a seat. Empty chairs = %d\n", pthread_self(), numberOfChairs);
         sem_post(&mutexChairs);
 
 
@@ -242,7 +242,7 @@ void *coordinatorThread()
         nextStudentWaiting = malloc(sizeof(struct StudentWaiting *));
         nextStudentWaiting->student = nextStudentNode;
         enqueueToStudentWaitingQueue(nextStudentWaiting);
-        //printf("Co: Student %ul with priority %d in the queue. Waiting students now = %d. Total requests = %d\n", nextStudentToQueue, nextStudentNode->priority, totalNumberOfChairs-numberOfChairs, numberOfStudentRequestsReceived);
+        printf("Co: Student %ul with priority %d in the queue. Waiting students now = %d. Total requests = %d\n", nextStudentToQueue, nextStudentNode->priority, totalNumberOfChairs-numberOfChairs, numberOfStudentRequestsReceived);
         sem_post(&mutexStudentWaitingQueue);
         
         //  NOTIFIES tutors that there is another student to tutor
