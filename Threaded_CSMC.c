@@ -42,8 +42,8 @@ sem_t tutorWaiting;
 int numberOfChairs;
 int totalStudentsTutored;
 pthread_t studentToQueue;
-
-sem_t gettingTutored;
+struct StudentNode *currentStudent;
+sem_t changePriority;
 
 
 /****************************
@@ -54,7 +54,7 @@ sem_t gettingTutored;
 //  STUDENT PRIORITY DATA STRUCTURE
 
 //PROTOTYPES
-void getTutored();
+void tutor();
 //  ADD TO ALL STUDENTS
 void addToAllStudents(struct StudentNode * studentToAdd) {
     //  if list is not empty, set new node next to head for insertion at front
@@ -197,20 +197,16 @@ void * studentThread(void * arg)
     printf("Student: waiting for tutor\n");
     sem_wait(studentWaiting);
     printf("Student: getting tutored\n");
-  
     //  LOCK on waiting room chairs
     sem_wait(&mutexChairs);
     numberOfChairs = numberOfChairs + 1;
     sem_post(&mutexChairs);
-                
-    //  Get tutored
-        sem_wait(&gettingTutored);
-        getTutored();
-        //Change priority
-	pthread_t studentThread;
-	struct StudentNode *currentStudent;
-	currentStudent = findInAllStudents(studentThread);
-	currentStudent->priority = currentStudent->priority + 1;
+    // Student is getting tutored
+    tutor();
+    sem_wait(&changePriority);
+    currentStudent = findInAllStudents(studentToQueue);
+    currentStudent->priority = currentStudent->priority + 1;
+    sem_post(&changePriority);
 }
 
 
@@ -248,12 +244,14 @@ void *coordinatorThread()
         enqueueToStudentWaitingQueue(nextStudentWaiting);
         printf("Co: Student %ul with priority %d in the queue. Waiting students now = %d. Total requests = %d\n", nextStudentToQueue, nextStudentWaiting->priority, 0, 0);
         sem_post(&mutexStudentWaitingQueue);
-
+        
         //  NOTIFIES tutors that there is another student to tutor
         printf("Coordinator: notifying tutor\n");
         sem_post(&tutorWaiting);
 
         counter = counter + 1;
+        
+
     }
 }
 
@@ -278,11 +276,12 @@ void *tutorThread()
 
     //  Tutor student
     printf("Tutor: tutoring student\n");
+    tutor();
     sem_post(studentWaiting);
 }
 
 //Student getting tutored
-void getTutored()
+void tutor()
 {
    sleep(.2);  
 }
@@ -329,7 +328,7 @@ int main(int argc, char *argv[])
     sem_init(&studentArrived, 0, 1);
     sem_init(&receivedStudentToQueue, 0, 0);
     sem_init(&tutorWaiting, 0, 0);
-    sem_init(&gettingTutored, 0, 1);
+    sem_init(&changePriority, 0, 1);
     //  CREATE THREADS
 
 
