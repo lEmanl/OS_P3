@@ -43,6 +43,7 @@ sem_t tutorWaiting;
 
 int numberOfChairs;
 int totalNumberOfChairs;
+int numberOfHelp;
 int totalStudentsTutored;
 int amountOfStudentsBeingTutored;
 pthread_t studentToQueue;
@@ -167,11 +168,8 @@ void * studentThread(void * arg)
 {
     struct StudentNode * studentNode= (struct StudentNode *) arg;
     studentNode->threadId = pthread_self();
-
-    int count = 10;
-    int counter = 0;
     
-    while(counter < count) {
+    while(studentNode->priority < numberOfHelp) {
         //  LOCK to try and enter waiting room
         sem_wait(&mutexChairs);
         if (numberOfChairs < 0)
@@ -213,8 +211,6 @@ void * studentThread(void * arg)
 
         // Increment student priotiy
         studentNode->priority = studentNode->priority + 1;
-
-        counter = counter + 1;
     }
 }
 
@@ -227,10 +223,7 @@ void *coordinatorThread()
     struct StudentWaiting * nextStudentWaiting;
     int numberOfStudentRequestsReceived = 0;
 
-    int count = 100;
-    int counter = 0;
-    
-    while(counter < count) {
+    while(1) {
         //  WAITING for student to arrive
         sem_wait(&coordinatorWaiting);
 
@@ -254,8 +247,6 @@ void *coordinatorThread()
         
         //  NOTIFIES tutors that there is another student to tutor
         sem_post(&tutorWaiting);
-
-        counter = counter + 1;
     }
 }
 
@@ -264,11 +255,8 @@ void *coordinatorThread()
 void *tutorThread()
 {
     struct StudentNode * studentNode;
-
-    int count = 10;
-    int counter = 0;
     
-    while(counter < count) {
+    while(1) {
         //  WAITING for student to tutor
         sem_wait(&tutorWaiting);
 
@@ -284,8 +272,6 @@ void *tutorThread()
         sem_post(studentNode->studentWaiting);
         tutor(studentNode);
         sem_post(studentNode->studentWaiting);
-
-        counter = counter + 1;
     }
 }
 
@@ -328,7 +314,6 @@ int main(int argc, char *argv[])
     sem_t * studentWaiting;
     int numberOfStudents;
     int numberOfTutors;
-    int numberOfHelp;
     void * value;
     long i;
 
@@ -401,9 +386,9 @@ int main(int argc, char *argv[])
     //Join tutor threads
     for(i = 0; i < numberOfTutors; i++) 
     {
-        assert(pthread_join(tutors[i], &value) == 0);
+        assert(pthread_cancel(tutors[i]) == 0);
     }
 
     //Join coordinator
-    assert(pthread_join(coordinator, &value) == 0);
+    assert(pthread_cancel(coordinator) == 0);
 }
