@@ -13,14 +13,14 @@
 
 // STRUCTS
 struct StudentNode {
-    int threadId;
+    pthread_t threadId;
     int priority;
-    sem_t studentWaiting;
+    sem_t * studentWaiting;
     struct StudentNode * next;
 };
 
 struct StudentWaiting {
-    sem_t studentWaiting;
+    sem_t * studentWaiting;
     int priority;
     struct StudentWaiting * next;
 };
@@ -40,7 +40,7 @@ sem_t receivedStudentToQueue;
 sem_t tutorWaiting;
 
 int numberOfChairs;
-int studentToQueue;
+pthread_t studentToQueue;
 
 
 
@@ -65,7 +65,7 @@ void addToAllStudents(struct StudentNode * studentToAdd) {
 
 
 //  FIND IN ALL STUDENTS WITH ID
-struct StudentNode * findInAllStudents(int threadId) {
+struct StudentNode * findInAllStudents(pthread_t threadId) {
     struct StudentNode * traversalStudentNode = allStudentsHead;
 
     while(traversalStudentNode != NULL) {
@@ -130,10 +130,12 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
     //  if the head is the only item in the list
     } else if(studentWaitingQueueHead->next == NULL) {
         dequeuedStudent = studentWaitingQueueHead;
+        free(studentWaitingQueueHead);
         studentWaitingQueueHead = NULL;
     //  if there are only 2 items in the list
     } else if(studentWaitingQueueHead->next->next == NULL) {
         dequeuedStudent = studentWaitingQueueHead->next;
+        free(studentWaitingQueueHead->next);
         studentWaitingQueueHead->next = NULL;
     //  if the queue is not empty
     } else {
@@ -142,6 +144,8 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
         }
 
         dequeuedStudent = traversalStudentWaiting->next;
+
+        free(traversalStudentWaiting->next);
         traversalStudentWaiting->next = NULL;
     }
 
@@ -157,85 +161,107 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
 
 
 //  STUDENT THREAD
-void * student()
+void * studentThread(void * arg)
 {
-    //pthread_t threadId = pthread_self();
+    sem_t * studentWaiting = (sem_t *) arg;
 
-    printf("Student Id %d\n", pthread_self());//threadId);
+    //  LOCK to try and enter waiting room
+    sem_wait(&mutexChairs);
+    if (numberOfChairs < 0)
+    {
+        sem_post(&mutexChairs);
+        return; 
+    }
+    printf("Student: entering waiting room\n");
+    numberOfChairs = numberOfChairs - 1;
+    sem_post(&mutexChairs);
 
-    // //  LOCK to try and enter waiting room
-    // sem_wait(&mutexChairs);
-    // if (numberOfChairs < 0)
-    // {
-    //     sem_post(&mutexChairs);
-    //     return; 
-    // }
-    // numberOfChairs = numberOfChairs - 1;
-    // sem_post(&mutexChairs);
 
+    //  LOCK on sharing student arrival
+    sem_wait(&studentArrived);
+    //  LOCK on student to queue
+    sem_wait(&mutexStudentToQueue);
+    printf("Student: setting student to queue\n");
+    studentToQueue = pthread_self();
+    sem_post(&mutexStudentToQueue);
+    //  NOTIFIES coordinator that student arrived
+    sem_post(&coordinatorWaiting);
+    //  WAITING for coordinator to queue student
+    sem_wait(&receivedStudentToQueue);
+    sem_post(&studentArrived);
 
-    // //  LOCK on sharing student arrival
-    // sem_wait(&studentArrived);
-    // //  LOCK on student to queue
-    // sem_wait(&mutexStudentToQueue);
-    // studentToQueue = studentId;
-    // sem_post(&mutexStudentToQueue);
-    // //  NOTIFIES coordinator that student arrived
-    // sem_post(&coordinatorWaiting);
-    // //  WAITING for coordinator to queue student
-    // sem_wait(&receivedStudentToQueue);
-    // sem_post(&studentArrived);
+    //  Wait for tutor
+    printf("Student: waiting for tutor\n");
+    sem_wait(studentWaiting);
+    printf("Student: getting tutored\n");
 
-    // //  Wait for tutor
-    // //  sem_wait();
+    //  LOCK on waiting room chairs
+    sem_wait(&mutexChairs);
+    numberOfChairs = numberOfChairs + 1;
+    sem_post(&mutexChairs);
 
-    // //  LOCK on waiting room chairs
-    // sem_wait(&mutexChairs);
-    // numberOfChairs = numberOfChairs + 1;
-    // sem_post(&mutexChairs);
+    //  Get tutored
 
-    // //  Get tutored
-
-    // //  Change priority
+    //  Change priority
 }
 
 
 //  COORDINATOR THREAD
-void *coordinator()
+void *coordinatorThread()
 {
+    pthread_t nextStudentToQueue;
+    struct StudentWaiting * nextStudentWaiting;
+    struct StudentNode * nextStudentWaitingNode;
+
+
     //  WAITING for student to arrive
     sem_wait(&coordinatorWaiting);
+    printf("Coordinator: waiting for student to arrive\n");
 
     //  LOCK on the student to queue
     sem_wait(&mutexStudentToQueue);
-    //      receives student to queue semaphore
+    printf("Coordinator: getting student to queue\n");
+    nextStudentToQueue = studentToQueue;
     sem_post(&mutexStudentToQueue);
 
-    //  NOTIFIES student that they were queued
+    //  NOTIFIES student that they were received
     sem_post(&receivedStudentToQueue);
+
+    nextStudentWaitingNode = findInAllStudents(nextStudentToQueue);
+    nextStudentWaiting = malloc(sizeof(struct StudentWaiting));
+    nextStudentWaiting->studentWaiting = nextStudentWaitingNode->studentWaiting;
+    nextStudentWaiting->priority = nextStudentWaitingNode->priority;
 
     //  LOCK on the queue of students
     sem_wait(&mutexStudentWaitingQueue);
-    //      enqueues the arrived student
+    printf("Coordinator: queueing student\n");
+    enqueueToStudentWaitingQueue(nextStudentWaiting);
     sem_post(&mutexStudentWaitingQueue);
 
     //  NOTIFIES tutors that there is another student to tutor
+    printf("Coordinator: notifying tutor\n");
     sem_post(&tutorWaiting);
 }
 
 
 //  TUTOR THREAD
-void *tutor()
+void *tutorThread()
 {
+    struct StudentWaiting * studentWaiting;
+
     //  WAITING for student to tutor
+    printf("Tutor: waiting for coordinator\n");
     sem_wait(&tutorWaiting);
 
     //  LOCK on the queue of students
     sem_wait(&mutexStudentWaitingQueue);
-    //      dequeue and receive student
+    printf("Tutor: dequeueing student\n");
+    studentWaiting = dequeueFromStudentWaitingQueue();
     sem_wait(&mutexStudentWaitingQueue);
 
     //  Tutor student
+    printf("Tutor: tutoring student\n");
+    sem_post(studentWaiting->studentWaiting);
 }
 
 
@@ -250,6 +276,8 @@ int main(int argc, char *argv[])
     pthread_t coordinator;
 
     //  LOCALS
+    struct StudentNode * studentToAdd;
+    sem_t * studentWaiting;
     int numberOfStudents;
     int numberOfTutors;
     int numberOfHelp;
@@ -273,15 +301,46 @@ int main(int argc, char *argv[])
     
     sem_init(&mutexChairs, 0, 1);
     sem_init(&mutexStudentToQueue, 0, 1);
+    sem_init(&mutexStudentWaitingQueue, 0, 1);
+
     sem_init(&coordinatorWaiting, 0, 0);
+    sem_init(&studentArrived, 0, 0);
     sem_init(&receivedStudentToQueue, 0, 0);
+    sem_init(&tutorWaiting, 0, 0);
+
+
+    //  CREATE THREADS
+
 
     //Creates student threads
     for(i = 0; i < numberOfStudents; i++)
     {
-        assert(pthread_create(&students[i], NULL, student, (void *) i) == 0);
-        printf("Thread Id %d\n", students[i]);
+        //  allocate student semaphore
+        studentWaiting = malloc(sizeof(sem_t));
+        sem_init(studentWaiting, 0, 0);
+
+        assert(pthread_create(&students[i], NULL, studentThread, (void *) studentWaiting) == 0);
+
+        //  add student to list of students
+        studentToAdd = malloc(sizeof(struct StudentNode));
+        studentToAdd->priority = 0;
+        studentToAdd->studentWaiting = studentWaiting;
+        studentToAdd->threadId = studentThread;
+        addToAllStudents(studentToAdd);
     }
+
+    //Creates tutor threads
+    for(i = 0; i < numberOfTutors; i++) 
+    {
+        assert(pthread_create(&tutors[i], NULL, tutorThread, (void *) i) == 0);
+    }
+
+    //Create coordinator
+    assert(pthread_create(coordinator, NULL, coordinatorThread, (void *) i) == 0);
+
+
+    //  JOINS THREADS
+
 
     //Join student threads
     for(i = 0; i < numberOfStudents; i++)
@@ -289,12 +348,12 @@ int main(int argc, char *argv[])
         assert(pthread_join(students[i], &value) == 0);
     }
 
-    /*
-    //Creates tutor threads
-    for(i = 0; i < numOfTutors; i++) 
+    //Join tutor threads
+    for(i = 0; i < numberOfTutors; i++) 
     {
-
-        assert(pthread_create(&tutors[i], NULL, thread, (void *) i) == 0);
+        assert(pthread_join(tutors[i], &value) == 0);
     }
-    */
+
+    //Join coordinator
+    assert(pthread_join(&coordinator, &value) == 0);
 }
