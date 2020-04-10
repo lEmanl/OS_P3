@@ -163,7 +163,7 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
 void * studentThread(void * arg)
 {
     sem_t * studentWaiting = (sem_t *) arg;
-    pthread_t studentThreadId = pthread_self();
+    // pthread_t studentThreadId = pthread_self();
 
     //  LOCK to try and enter waiting room
     sem_wait(&mutexChairs);
@@ -183,7 +183,7 @@ void * studentThread(void * arg)
     //  LOCK on student to queue
     sem_wait(&mutexStudentToQueue);
     printf("Student: setting student to queue\n");
-    studentToQueue = studentThreadId;
+    studentToQueue = pthread_self();
     sem_post(&mutexStudentToQueue);
     //  NOTIFIES coordinator that student arrived
     sem_post(&coordinatorWaiting);
@@ -252,7 +252,7 @@ void *coordinatorThread()
 //  TUTOR THREAD
 void *tutorThread()
 {
-    pthread_t tutorThreadId = pthread_self();
+    // pthread_t tutorThreadId = pthread_self();
     struct StudentNode * studentNode;
 
     //  WAITING for student to tutor
@@ -266,7 +266,7 @@ void *tutorThread()
     sem_post(&mutexStudentWaitingQueue);
 
     //  set the tutor for the student
-    studentNode->tutorThreadId = tutorThreadId;
+    studentNode->tutorThreadId = pthread_self();
 
     //  Tutor student
     sem_post(studentNode->studentWaiting);
