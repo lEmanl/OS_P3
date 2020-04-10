@@ -216,29 +216,21 @@ void *coordinatorThread()
     struct StudentNode * nextStudentNode;
     struct StudentWaiting * nextStudentWaiting;
 
-    int count = 10;
+    int count = 100;
     int counter = 0;
     
     while(counter < count) {
         //  WAITING for student to arrive
-        printf("Coordinator: waiting for student to arrive\n");
         sem_wait(&coordinatorWaiting);
 
         //  LOCK on the student to queue
         sem_wait(&mutexStudentToQueue);
-        printf("Coordinator: notified student to queue\n");
         nextStudentToQueue = studentToQueue;
-        printf("Coordinator: received student to queue\n");
         sem_post(&mutexStudentToQueue);
 
         //  NOTIFIES student that they were received
-        printf("Coordinator: notifies that student to queue was received\n");
         sem_post(&receivedStudentToQueue);
         nextStudentNode = findInAllStudents(nextStudentToQueue);
-        printf("Coordinator: found student\n");
-        if(nextStudentNode == NULL) {
-            printf("Coordinator: student found is NULL\n");
-        }
 
         //  LOCK on the queue of students
         sem_wait(&mutexStudentWaitingQueue);
@@ -249,12 +241,9 @@ void *coordinatorThread()
         sem_post(&mutexStudentWaitingQueue);
         
         //  NOTIFIES tutors that there is another student to tutor
-        printf("Coordinator: notifying tutor\n");
         sem_post(&tutorWaiting);
 
         counter = counter + 1;
-        
-
     }
 }
 
@@ -266,13 +255,10 @@ void *tutorThread()
     struct StudentNode * studentNode;
 
     //  WAITING for student to tutor
-    printf("Tutor: waiting for coordinator\n");
     sem_wait(&tutorWaiting);
 
     //  LOCK on the queue of students
-    printf("Tutor: getting lock on student queue\n");
     sem_wait(&mutexStudentWaitingQueue);
-    printf("Tutor: dequeueing student\n");
     studentNode = dequeueFromStudentWaitingQueue()->student;
     sem_post(&mutexStudentWaitingQueue);
 
