@@ -46,8 +46,8 @@ int totalNumberOfChairs;
 int numberOfHelp;
 int totalStudentsTutored;
 int amountOfStudentsBeingTutored;
-const float tutorSleepTime = 0.2;
-const float programmingSleepTime = 2.0;
+const float TUTOR_SLEEP_TIME = 0.2;
+const float PROGRAMMING_SLEEP_TIME_MAX = 2.0;
 pthread_t studentToQueue;
 struct StudentNode *currentStudent;
 
@@ -169,6 +169,7 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
 void * studentThread(void * arg)
 {
     struct StudentNode * studentNode= (struct StudentNode *) arg;
+    float programmingSleepTime = 0.0;
     studentNode->threadId = pthread_self();
     
     while(studentNode->priority < numberOfHelp) {
@@ -176,43 +177,45 @@ void * studentThread(void * arg)
         sem_wait(&mutexChairs);
         if (numberOfChairs < 0)
         {
-            printf("St: Student %ul found no empty chairs. Will try again later.\n", pthread_self());
+            printf("St: Student %u found no empty chairs. Will try again later.\n", pthread_self());
             sem_post(&mutexChairs);
-            return; 
+            programmingSleepTime = ((float)rand())/(RAND_MAX/PROGRAMMING_SLEEP_TIME_MAX);
+            printf("St: Sleep time %f\n", programmingSleepTime);
+            sleep(programmingSleepTime);
+        } else {
+            numberOfChairs = numberOfChairs - 1;
+            printf("St: Student %ul takes a seat. Empty chairs = %d\n", pthread_self(), numberOfChairs);
+            sem_post(&mutexChairs);
+
+
+            //  LOCK on sharing student arrival
+            sem_wait(&studentArrived);
+            //  LOCK on student to queue
+            sem_wait(&mutexStudentToQueue);
+            studentToQueue = studentNode->threadId;
+            sem_post(&mutexStudentToQueue);
+
+            //  NOTIFIES coordinator that student arrived
+            sem_post(&coordinatorWaiting);
+
+            //  WAITING for coordinator to queue student
+            sem_wait(&receivedStudentToQueue);
+            sem_post(&studentArrived);
+
+            //  Wait for tutor
+            sem_wait(studentNode->studentWaiting);
+            
+            //  LOCK on waiting room chairs
+            sem_wait(&mutexChairs);
+            numberOfChairs = numberOfChairs + 1;
+            sem_post(&mutexChairs);
+
+            // Student is getting tutored
+            sleep(TUTOR_SLEEP_TIME); 
+
+            // Increment student priotiy
+            studentNode->priority = studentNode->priority + 1;
         }
-
-        numberOfChairs = numberOfChairs - 1;
-        printf("St: Student %ul takes a seat. Empty chairs = %d\n", pthread_self(), numberOfChairs);
-        sem_post(&mutexChairs);
-
-
-        //  LOCK on sharing student arrival
-        sem_wait(&studentArrived);
-        //  LOCK on student to queue
-        sem_wait(&mutexStudentToQueue);
-        studentToQueue = studentNode->threadId;
-        sem_post(&mutexStudentToQueue);
-
-        //  NOTIFIES coordinator that student arrived
-        sem_post(&coordinatorWaiting);
-
-        //  WAITING for coordinator to queue student
-        sem_wait(&receivedStudentToQueue);
-        sem_post(&studentArrived);
-
-        //  Wait for tutor
-        sem_wait(studentNode->studentWaiting);
-        
-        //  LOCK on waiting room chairs
-        sem_wait(&mutexChairs);
-        numberOfChairs = numberOfChairs + 1;
-        sem_post(&mutexChairs);
-
-        // Student is getting tutored
-        sleep(tutorSleepTime); 
-
-        // Increment student priotiy
-        studentNode->priority = studentNode->priority + 1;
     }
 }
 
@@ -286,7 +289,7 @@ void tutor(struct StudentNode * studentNode)
     amountOfStudentsBeingTutored = amountOfStudentsBeingTutored + 1;
     sem_post(&mutexAmountOfStudentBeingTutored);
 
-    sleep(tutorSleepTime);  
+    sleep(TUTOR_SLEEP_TIME);  
 
     //  LOCK amount of students getting tutored
     sem_wait(&mutexAmountOfStudentBeingTutored);
@@ -306,6 +309,9 @@ void tutor(struct StudentNode * studentNode)
 //  MAIN PROGRAM
 int main(int argc, char *argv[])
 {
+    //  SEEDING SRAND
+    srand((unsigned int)time(NULL));
+
     //  THREADS
     pthread_t * students;
     pthread_t * tutors;
