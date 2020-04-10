@@ -325,7 +325,8 @@ int main(int argc, char *argv[])
         studentToAdd = malloc(sizeof(struct StudentNode));
         studentToAdd->priority = 0;
         studentToAdd->studentWaiting = studentWaiting;
-        studentToAdd->threadId = studentThread;
+        studentToAdd->threadId = (pthread_t *)studentThread;
+
         addToAllStudents(studentToAdd);
     }
 
