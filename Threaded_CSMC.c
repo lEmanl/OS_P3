@@ -206,7 +206,9 @@ void * studentThread(void * arg)
     sem_wait(&changePriority);
     currentStudent = findInAllStudents(studentToQueue);
     currentStudent->priority = currentStudent->priority + 1;
+    totalStudents = totalStudents + 1;
     sem_post(&changePriority);
+   
 }
 
 
@@ -224,7 +226,6 @@ void *coordinatorThread()
         //  WAITING for student to arrive
         printf("Coordinator: waiting for student to arrive\n");
         sem_wait(&coordinatorWaiting);
-
         //  LOCK on the student to queue
         sem_wait(&mutexStudentToQueue);
         printf("Coordinator: received student to queue\n");
