@@ -322,7 +322,10 @@ int main(int argc, char *argv[])
     sscanf(argv[2], "%d", &numberOfTutors);
     sscanf(argv[3], "%d", &numberOfChairs);
     sscanf(argv[4], "%d", &numberOfHelp);
+
+    //  INITIALIZE GLOBAL VALUES
     totalNumberOfChairs = numberOfChairs;
+    totalStudentsTutored = 0;
 
     //  ALLOCATE THREADS
     students = malloc(sizeof(pthread_t) * numberOfStudents);
