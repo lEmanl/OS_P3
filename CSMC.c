@@ -175,12 +175,11 @@ void * studentThread(void * arg)
     while(studentNode->priority < numberOfHelp) {
         //  LOCK to try and enter waiting room
         sem_wait(&mutexChairs);
-        if (numberOfChairs < 0)
+        if (numberOfChairs <= 0)
         {
-            printf("St: Student %u found no empty chairs. Will try again later.\n", pthread_self());
+            printf("St: Student %ul found no empty chairs. Will try again later.\n", pthread_self());
             sem_post(&mutexChairs);
             programmingSleepTime = ((float)rand())/(RAND_MAX/PROGRAMMING_SLEEP_TIME_MAX);
-            printf("St: Sleep time %f\n", programmingSleepTime);
             sleep(programmingSleepTime);
         } else {
             numberOfChairs = numberOfChairs - 1;
