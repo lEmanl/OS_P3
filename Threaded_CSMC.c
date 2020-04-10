@@ -263,7 +263,7 @@ void *tutorThread()
     sem_wait(&mutexStudentWaitingQueue);
     printf("Tutor: dequeueing student\n");
     studentWaiting = dequeueFromStudentWaitingQueue();
-    sem_wait(&mutexStudentWaitingQueue);
+    sem_post(&mutexStudentWaitingQueue);
 
     //  Tutor student
     printf("Tutor: tutoring student\n");
