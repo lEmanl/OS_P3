@@ -165,23 +165,36 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
 
 
 
+//  STUDENT GETTING TUTORED
+void studentGettingTutored() {
+    sleep(TUTOR_SLEEP_TIME);
+}
+
+//  STUDENT PROGRAMMING
+void studentProgramming() {
+    sleep(((float)rand())/(RAND_MAX/PROGRAMMING_SLEEP_TIME_MAX));
+}
+
 //  STUDENT THREAD
 void * studentThread(void * arg)
 {
     struct StudentNode * studentNode= (struct StudentNode *) arg;
-    float programmingSleepTime = 0.0;
     studentNode->threadId = pthread_self();
+
+    //  student starts off by progrogramming
+    studentProgramming();
     
     while(studentNode->priority < numberOfHelp) {
         //  LOCK to try and enter waiting room
         sem_wait(&mutexChairs);
         if (numberOfChairs <= 0)
         {
+            //  go back to programming
             printf("St: Student %ul found no empty chairs. Will try again later.\n", pthread_self());
             sem_post(&mutexChairs);
-            programmingSleepTime = ((float)rand())/(RAND_MAX/PROGRAMMING_SLEEP_TIME_MAX);
-            sleep(programmingSleepTime);
+            studentProgramming();
         } else {
+            //  take chair
             numberOfChairs = numberOfChairs - 1;
             printf("St: Student %ul takes a seat. Empty chairs = %d\n", pthread_self(), numberOfChairs);
             sem_post(&mutexChairs);
@@ -210,7 +223,7 @@ void * studentThread(void * arg)
             sem_post(&mutexChairs);
 
             // Student is getting tutored
-            sleep(TUTOR_SLEEP_TIME); 
+            studentGettingTutored();
 
             // Increment student priotiy
             studentNode->priority = studentNode->priority + 1;
