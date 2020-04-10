@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
     sem_init(&mutexStudentWaitingQueue, 0, 1);
 
     sem_init(&coordinatorWaiting, 0, 0);
-    sem_init(&studentArrived, 0, 0);
+    sem_init(&studentArrived, 0, 1);
     sem_init(&receivedStudentToQueue, 0, 0);
     sem_init(&tutorWaiting, 0, 0);
 
