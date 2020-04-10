@@ -34,6 +34,7 @@ sem_t mutexChairs;
 sem_t mutexStudentToQueue;
 sem_t mutexStudentWaitingQueue;
 sem_t mutexAmountOfStudentBeingTutored;
+sem_t mutexTotalStudentsTutored;
 
 sem_t coordinatorWaiting;
 sem_t studentArrived;
@@ -45,7 +46,6 @@ int totalStudentsTutored;
 int amountOfStudentsBeingTutored;
 pthread_t studentToQueue;
 struct StudentNode *currentStudent;
-sem_t mutexTotalStudentsTutored;
 
 
 /****************************
@@ -223,6 +223,7 @@ void *coordinatorThread()
         //  WAITING for student to arrive
         printf("Coordinator: waiting for student to arrive\n");
         sem_wait(&coordinatorWaiting);
+
         //  LOCK on the student to queue
         sem_wait(&mutexStudentToQueue);
         printf("Coordinator: notified student to queue\n");
@@ -231,8 +232,13 @@ void *coordinatorThread()
         sem_post(&mutexStudentToQueue);
 
         //  NOTIFIES student that they were received
+        printf("Coordinator: notifies that student to queue was received\n");
         sem_post(&receivedStudentToQueue);
         nextStudentNode = findInAllStudents(nextStudentToQueue);
+        printf("Coordinator: found student\n");
+        if(nextStudentNode == NULL) {
+            printf("Coordinator: student found is NULL\n");
+        }
 
         //  LOCK on the queue of students
         sem_wait(&mutexStudentWaitingQueue);
@@ -338,6 +344,7 @@ int main(int argc, char *argv[])
     // arrivedStudentQueue = malloc(numberOfStudents * sizeof *arrivedStudentQueue);   
     // waitingStudentQueue = malloc(numberOfStudents * sizeof *waitingStudentQueue);      
     //  INITIALIZE SEMAPHORES
+
     
     sem_init(&mutexChairs, 0, 1);
     sem_init(&mutexStudentToQueue, 0, 1);
