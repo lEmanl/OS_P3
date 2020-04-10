@@ -1,4 +1,4 @@
-//gcc MyProgram.c -o MyProgram -lpthread
+//gcc Threaded_CSMC.c -o Threaded_CSMC -lpthread
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
     //Join student threads
     for(i = 0; i < numberOfStudents; i++)
     {
-        assert(pthread_join(&students[i], &value) == 0);
+        assert(pthread_join(students[i], &value) == 0);
     }
 
     /*
