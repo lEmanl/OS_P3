@@ -186,8 +186,10 @@ void * studentThread(void * arg)
     studentToQueue = pthread_self();
     printf("Student: set student to queue\n");
     sem_post(&mutexStudentToQueue);
+
     //  NOTIFIES coordinator that student arrived
     sem_post(&coordinatorWaiting);
+
     //  WAITING for coordinator to queue student
     sem_wait(&receivedStudentToQueue);
     sem_post(&studentArrived);
@@ -223,8 +225,9 @@ void *coordinatorThread()
         sem_wait(&coordinatorWaiting);
         //  LOCK on the student to queue
         sem_wait(&mutexStudentToQueue);
-        printf("Coordinator: received student to queue\n");
+        printf("Coordinator: notified student to queue\n");
         nextStudentToQueue = studentToQueue;
+        printf("Coordinator: received student to queue\n");
         sem_post(&mutexStudentToQueue);
 
         //  NOTIFIES student that they were received
@@ -261,6 +264,7 @@ void *tutorThread()
     sem_wait(&tutorWaiting);
 
     //  LOCK on the queue of students
+    printf("Tutor: getting lock on student queue\n");
     sem_wait(&mutexStudentWaitingQueue);
     printf("Tutor: dequeueing student\n");
     studentNode = dequeueFromStudentWaitingQueue()->student;
