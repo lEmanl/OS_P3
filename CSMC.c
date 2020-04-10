@@ -46,6 +46,8 @@ int totalNumberOfChairs;
 int numberOfHelp;
 int totalStudentsTutored;
 int amountOfStudentsBeingTutored;
+const float tutorSleepTime = 0.2;
+const float programmingSleepTime = 2.0;
 pthread_t studentToQueue;
 struct StudentNode *currentStudent;
 
@@ -207,7 +209,7 @@ void * studentThread(void * arg)
         sem_post(&mutexChairs);
 
         // Student is getting tutored
-        sleep(.2); 
+        sleep(tutorSleepTime); 
 
         // Increment student priotiy
         studentNode->priority = studentNode->priority + 1;
@@ -284,7 +286,7 @@ void tutor(struct StudentNode * studentNode)
     amountOfStudentsBeingTutored = amountOfStudentsBeingTutored + 1;
     sem_post(&mutexAmountOfStudentBeingTutored);
 
-    sleep(.2);  
+    sleep(tutorSleepTime);  
 
     //  LOCK amount of students getting tutored
     sem_wait(&mutexAmountOfStudentBeingTutored);
