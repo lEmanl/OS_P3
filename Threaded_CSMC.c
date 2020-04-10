@@ -336,7 +336,7 @@ int main(int argc, char *argv[])
     }
 
     //Create coordinator
-    assert(pthread_create(coordinator, NULL, coordinatorThread, (void *) i) == 0);
+    assert(pthread_create(&coordinator, NULL, coordinatorThread, (void *) i) == 0);
 
 
     //  JOINS THREADS
@@ -355,5 +355,5 @@ int main(int argc, char *argv[])
     }
 
     //Join coordinator
-    assert(pthread_join(&coordinator, &value) == 0);
+    assert(pthread_join(coordinator, &value) == 0);
 }
