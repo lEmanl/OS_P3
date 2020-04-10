@@ -43,7 +43,7 @@ int numberOfChairs;
 int totalStudentsTutored;
 pthread_t studentToQueue;
 
-
+sem_t gettingTutored;
 
 
 /****************************
@@ -53,14 +53,14 @@ pthread_t studentToQueue;
 
 //  STUDENT PRIORITY DATA STRUCTURE
 
-
+//PROTOTYPES
+void getTutored();
 //  ADD TO ALL STUDENTS
 void addToAllStudents(struct StudentNode * studentToAdd) {
     //  if list is not empty, set new node next to head for insertion at front
     if(allStudentsHead != NULL) {
         studentToAdd->next = allStudentsHead;
-    }
-        
+    }       
     allStudentsHead = studentToAdd;
 }
 
@@ -88,11 +88,11 @@ void enqueueToStudentWaitingQueue(struct StudentWaiting * studentWaitingToQueue)
     struct StudentWaiting * traversalStudentWaiting = studentWaitingQueueHead;
     struct StudentWaiting * previousTraversalStudentWaiting = NULL;
     
-    //  if the queue is empty
-    if(studentWaitingQueueHead == NULL) {
-        studentWaitingToQueue->next = NULL;
+    //  if the queue is empty and checks if input is not null
+    if(studentWaitingToQueue != NULL && studentWaitingQueueHead == NULL) {
         studentWaitingQueueHead = studentWaitingToQueue;
-
+        studentWaitingQueueHead->next = NULL;
+	traversalStudentWaiting = studentWaitingQueueHead;
     //  if the queue is not empty
     } else {
         //  find the node to insert before
@@ -197,15 +197,20 @@ void * studentThread(void * arg)
     printf("Student: waiting for tutor\n");
     sem_wait(studentWaiting);
     printf("Student: getting tutored\n");
-
+  
     //  LOCK on waiting room chairs
     sem_wait(&mutexChairs);
     numberOfChairs = numberOfChairs + 1;
     sem_post(&mutexChairs);
-
+                
     //  Get tutored
-
-    //  Change priority
+        sem_wait(&gettingTutored);
+        getTutored();
+        //Change priority
+	pthread_t studentThread;
+	struct StudentNode *currentStudent;
+	currentStudent = findInAllStudents(studentThread);
+	currentStudent->priority = currentStudent->priority + 1;
 }
 
 
@@ -218,7 +223,7 @@ void *coordinatorThread()
 
     int count = 10;
     int counter = 0;
-
+    
     while(counter < count) {
         //  WAITING for student to arrive
         printf("Coordinator: waiting for student to arrive\n");
@@ -228,6 +233,7 @@ void *coordinatorThread()
         sem_wait(&mutexStudentToQueue);
         printf("Coordinator: received student to queue\n");
         nextStudentToQueue = studentToQueue;
+	
         sem_post(&mutexStudentToQueue);
 
         //  NOTIFIES student that they were received
@@ -237,7 +243,6 @@ void *coordinatorThread()
         nextStudentWaiting = malloc(sizeof(struct StudentWaiting));
         nextStudentWaiting->studentWaiting = nextStudentWaitingNode->studentWaiting;
         nextStudentWaiting->priority = nextStudentWaitingNode->priority;
-
         //  LOCK on the queue of students
         sem_wait(&mutexStudentWaitingQueue);
         enqueueToStudentWaitingQueue(nextStudentWaiting);
@@ -276,6 +281,11 @@ void *tutorThread()
     sem_post(studentWaiting);
 }
 
+//Student getting tutored
+void getTutored()
+{
+   sleep(.2);  
+}
 
 
 
@@ -319,8 +329,7 @@ int main(int argc, char *argv[])
     sem_init(&studentArrived, 0, 1);
     sem_init(&receivedStudentToQueue, 0, 0);
     sem_init(&tutorWaiting, 0, 0);
-
-
+    sem_init(&gettingTutored, 0, 1);
     //  CREATE THREADS
 
 
@@ -337,7 +346,9 @@ int main(int argc, char *argv[])
         studentToAdd = malloc(sizeof(struct StudentNode));
         studentToAdd->priority = 0;
         studentToAdd->studentWaiting = studentWaiting;
-        studentToAdd->threadId = students[i];
+        //studentToAdd->threadId = students[i];
+	//Gets id from current thread executing
+        studentToAdd->threadId = pthread_self();
 
         addToAllStudents(studentToAdd);
     }
