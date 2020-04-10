@@ -1,4 +1,4 @@
-//gcc CSMC.c -o CSMC -lpthread
+//gcc csmc.c -o csmc -lpthread
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -24,6 +24,8 @@ struct StudentWaiting {
     struct StudentNode * student;
     struct StudentWaiting * next;
 };
+
+
 
 
 // GLOBAL VARIABLES
@@ -52,10 +54,11 @@ pthread_t studentToQueue;
 struct StudentNode *currentStudent;
 
 
+
+
 /****************************
  *   DATA STRUCTURE FUNCTIONS
  ***************************/
-
 
 //  STUDENT PRIORITY DATA STRUCTURE
 
@@ -87,7 +90,6 @@ struct StudentNode * findInAllStudents(pthread_t threadId) {
 
 
 //  STUDENT WAITING QUEUEU DATA STRUCTURE
-
 
 //  ENQUEUE STUDENT WAITING QUEUE
 void enqueueToStudentWaitingQueue(struct StudentWaiting * studentWaitingToQueue) {
@@ -125,7 +127,6 @@ void enqueueToStudentWaitingQueue(struct StudentWaiting * studentWaitingToQueue)
 }
 
 
-
 //  DEQUEUE FROM STUDENT WAITING QUEUE
 struct StudentWaiting * dequeueFromStudentWaitingQueue() {
     struct StudentWaiting * traversalStudentWaiting = studentWaitingQueueHead;
@@ -161,8 +162,6 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
 /********************
  *   THREAD FUNCTIONS
  *******************/
-
-
 
 
 //  STUDENT GETTING TUTORED
@@ -315,6 +314,7 @@ void tutor(struct StudentNode * studentNode)
 
     printf("Tu: Student %ul tutored by Tutor %ul. Students tutored now = %d. Total session tutored = %d.\n", studentNode->threadId, studentNode->tutorThreadId, amountOfStudentsBeingTutored, totalStudentsTutored);
 }
+
 
 
 
