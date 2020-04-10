@@ -189,13 +189,13 @@ void * studentThread(void * arg)
         if (numberOfChairs <= 0)
         {
             //  go back to programming
-            printf("St: Student %ul found no empty chairs. Will try again later.\n", pthread_self());
+            printf("St: Student %ul found no empty chairs. Will try again later.\n", studentNode->threadId);
             sem_post(&mutexChairs);
             studentProgramming();
         } else {
             //  take chair
             numberOfChairs = numberOfChairs - 1;
-            printf("St: Student %ul takes a seat. Empty chairs = %d\n", pthread_self(), numberOfChairs);
+            printf("St: Student %ul takes a seat. Empty chairs = %d\n", studentNode->threadId, numberOfChairs);
             sem_post(&mutexChairs);
 
 
@@ -223,6 +223,7 @@ void * studentThread(void * arg)
 
             // Student is getting tutored
             studentGettingTutored();
+            printf("St: Student %ul received help from tutor %ul.\n", studentNode->threadId, studentNode->tutorThreadId);
 
             // Increment student priotiy
             studentNode->priority = studentNode->priority + 1;
