@@ -21,7 +21,6 @@ struct StudentWaiting {
     sem_t studentWaiting;
     int priority;
     struct StudentWaiting * next;
-    struct StudentWaiting * previous;
 };
 
 
@@ -29,6 +28,44 @@ struct StudentWaiting {
 // GLOBAL VARIABLES
 struct StudentNode * allStudentsHead;
 struct StudentWaiting * studentWaitingQueueHead;
+struct StudentNode * allStudentsHead;
+
+
+//  ADD TO ALL STUDENTS
+void addToAllStudents(struct StudentNode * studentToAdd) {
+    //  if list is not empty, set new node next to head for insertion at front
+    if(allStudentsHead != NULL) {
+        studentToAdd->next = allStudentsHead;
+    }
+        
+    allStudentsHead = studentToAdd;
+}
+
+
+//  FIND IN ALL STUDENTS WITH ID
+struct StudentNode * findInAllStudents(int threadId) {
+    struct StudentNode * traversalStudentNode = allStudentsHead;
+
+    while(traversalStudentNode != NULL) {
+        if(traversalStudentNode->threadId == threadId) {
+            break;
+        }
+        traversalStudentNode = traversalStudentNode->next;
+    }
+
+    return traversalStudentNode;
+}
+
+//  PRINTS ALL STUDENTS
+void printAllStudents() {
+    struct StudentNode * traversalStudentNode = allStudentsHead;
+
+    while(traversalStudentNode != NULL) {
+        printf("Student thread ID: %d\n", traversalStudentNode->threadId);
+        traversalStudentNode = traversalStudentNode->next;
+    }
+}
+
 
 
 
@@ -39,7 +76,6 @@ void enqueueToStudentWaitingQueue(struct StudentWaiting * studentWaitingToQueue)
     
     //  if the queue is empty
     if(studentWaitingQueueHead == NULL) {
-        printf("Q is empty\n");
         studentWaitingToQueue->next = NULL;
         studentWaitingQueueHead = studentWaitingToQueue;
 
@@ -58,12 +94,10 @@ void enqueueToStudentWaitingQueue(struct StudentWaiting * studentWaitingToQueue)
 
         //  if the previous student is NULL, then insert before the head
         if(previousTraversalStudentWaiting == NULL) {
-            printf("Q insert before head\n");
             studentWaitingToQueue->next = studentWaitingQueueHead;
             studentWaitingQueueHead = studentWaitingToQueue;        
         //  insert between the traversal and previous node
         } else {
-            printf("Q insert between traversal and previous\n");
             studentWaitingToQueue->next = traversalStudentWaiting;
             previousTraversalStudentWaiting->next = studentWaitingToQueue;
         }
@@ -80,12 +114,10 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
         printf("queue empty\n");
     //  if the head is the only item in the list
     } else if(studentWaitingQueueHead->next == NULL) {
-        printf("head is the only item\n");
         dequeuedStudent = studentWaitingQueueHead;
         studentWaitingQueueHead = NULL;
     //  if there are only 2 items in the list
     } else if(studentWaitingQueueHead->next->next == NULL) {
-        printf("there are only 2 items\n");
         dequeuedStudent = studentWaitingQueueHead->next;
         studentWaitingQueueHead->next = NULL;
     //  if the queue is not empty
@@ -94,7 +126,6 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
             traversalStudentWaiting = traversalStudentWaiting->next;
         }
 
-        printf("queue is not empty\n");
         dequeuedStudent = traversalStudentWaiting->next;
         traversalStudentWaiting->next = NULL;
     }
@@ -107,7 +138,7 @@ void printStudentWaitingQueue() {
     struct StudentWaiting * traversalStudentWaiting = studentWaitingQueueHead;
 
     while(traversalStudentWaiting != NULL) {
-        printf("Priority: %d\n", traversalStudentWaiting->priority);
+        printf("priority: %d\n", traversalStudentWaiting->priority);
         traversalStudentWaiting = traversalStudentWaiting->next;
     }
 }
@@ -124,30 +155,47 @@ int main(int argc, char *argv[])
     struct StudentWaiting s4;
     s4.priority = 1;
 
+    struct StudentNode sn1;
+    sn1.threadId = 1234;
+    sn1.priority = 10;
+    struct StudentNode sn2;
+    sn2.threadId = 15432;
+    sn2.priority = 1;
+    struct StudentNode sn3;
+    sn3.threadId = 1763;
+    sn3.priority = 30;
+
+    //  TESTS FOR QUEUE
+
+    printf("\n\nSTUDENT QUEUE\n\n");
     enqueueToStudentWaitingQueue(&s3);
     enqueueToStudentWaitingQueue(&s1);
     enqueueToStudentWaitingQueue(&s2);
-
     printStudentWaitingQueue();
 
     printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
-
-    printStudentWaitingQueue();
-
     printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
 
     enqueueToStudentWaitingQueue(&s4);
-
-    printStudentWaitingQueue();
-
-
-    printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
-
     printStudentWaitingQueue();
 
     printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
-
     printStudentWaitingQueue();
-
+    printf("Dequeued student: %d\n", dequeueFromStudentWaitingQueue()->priority);
+    printStudentWaitingQueue();
     dequeueFromStudentWaitingQueue();
+
+    //  TESTS FOR ALL STUDENTS
+
+    printf("\n\nALL STUDENTS\n\n");
+    addToAllStudents(&sn1);
+    addToAllStudents(&sn2);
+    addToAllStudents(&sn3);
+    printAllStudents();
+    printf("Looking for thread id: %d\n", sn1.threadId);
+    printf("Found: %d\n", findInAllStudents(sn1.threadId)->threadId);
+    printf("Looking for thread id: %d\n", sn2.threadId);
+    printf("Found: %d\n", findInAllStudents(sn2.threadId)->threadId);
+    printf("Looking for thread id: %d\n", sn3.threadId);
+    printf("Found: %d\n", findInAllStudents(sn3.threadId)->threadId);
 }

@@ -28,7 +28,6 @@ struct StudentWaiting {
 // GLOBAL VARIABLES
 struct StudentNode * allStudentsHead;
 struct StudentWaiting * studentWaitingQueueHead;
-struct StudentWaiting * studentWaitingQueueTail;
 
 sem_t mutexChairs;
 sem_t mutexStudentToQueue;
@@ -64,41 +63,88 @@ void addToAllStudents(struct StudentNode * studentToAdd) {
 }
 
 
+//  FIND IN ALL STUDENTS WITH ID
+struct StudentNode * findInAllStudents(int threadId) {
+    struct StudentNode * traversalStudentNode = allStudentsHead;
+
+    while(traversalStudentNode != NULL) {
+        if(traversalStudentNode->threadId == threadId) {
+            break;
+        }
+        traversalStudentNode = traversalStudentNode->next;
+    }
+
+    return traversalStudentNode;
+}
+
+
 //  STUDENT WAITING QUEUEU DATA STRUCTURE
 
 
 //  ENQUEUE STUDENT WAITING QUEUE
 void enqueueToStudentWaitingQueue(struct StudentWaiting * studentWaitingToQueue) {
     struct StudentWaiting * traversalStudentWaiting = studentWaitingQueueHead;
+    struct StudentWaiting * previousTraversalStudentWaiting = NULL;
     
     //  if the queue is empty
     if(studentWaitingQueueHead == NULL) {
-        studentWaitingToQueue->next = studentWaitingQueueTail;
+        studentWaitingToQueue->next = NULL;
         studentWaitingQueueHead = studentWaitingToQueue;
+
     //  if the queue is not empty
     } else {
-        //  if the student has the highest priority
-        if(studentWaitingQueueTail->priority > studentWaitingToQueue->priority) {
-            studentWaitingToQueue->next = traversalStudentWaiting;
-                traversalStudentWaiting = studentWaitingToQueue;
+        //  find the node to insert before
+        while(traversalStudentWaiting != NULL) {
+            //  if the node had less than or equal to priority
+            if(traversalStudentWaiting->priority > studentWaitingToQueue->priority) {
+                previousTraversalStudentWaiting = traversalStudentWaiting;
+                traversalStudentWaiting = traversalStudentWaiting->next;
+            } else {
+                break;
+            }
         }
 
-        while(traversalStudentWaiting != NULL) {
-            if(traversalStudentWaiting->priority <= studentWaitingToQueue->priority) {
-                studentWaitingToQueue->next = traversalStudentWaiting;
-                traversalStudentWaiting = studentWaitingToQueue;
-                traversalStudentWaiting = NULL;
-            } else {
-                traversalStudentWaiting = traversalStudentWaiting->next;
-            }
+        //  if the previous student is NULL, then insert before the head
+        if(previousTraversalStudentWaiting == NULL) {
+            studentWaitingToQueue->next = studentWaitingQueueHead;
+            studentWaitingQueueHead = studentWaitingToQueue;        
+        //  insert between the traversal and previous node
+        } else {
+            studentWaitingToQueue->next = traversalStudentWaiting;
+            previousTraversalStudentWaiting->next = studentWaitingToQueue;
         }
     }
 }
 
 
-//  DEQUEUE STUDENT WAITING QUEUE
-struct StudentWaiting * dequeueFromStudentWaitingQueue() {
 
+//  DEQUEUE FROM STUDENT WAITING QUEUE
+struct StudentWaiting * dequeueFromStudentWaitingQueue() {
+    struct StudentWaiting * traversalStudentWaiting = studentWaitingQueueHead;
+    struct StudentWaiting * dequeuedStudent = NULL;
+
+    //  if the queue is empty
+    if(studentWaitingQueueHead == NULL) {
+        printf("queue empty\n");
+    //  if the head is the only item in the list
+    } else if(studentWaitingQueueHead->next == NULL) {
+        dequeuedStudent = studentWaitingQueueHead;
+        studentWaitingQueueHead = NULL;
+    //  if there are only 2 items in the list
+    } else if(studentWaitingQueueHead->next->next == NULL) {
+        dequeuedStudent = studentWaitingQueueHead->next;
+        studentWaitingQueueHead->next = NULL;
+    //  if the queue is not empty
+    } else {
+        while(traversalStudentWaiting->next->next != NULL) {
+            traversalStudentWaiting = traversalStudentWaiting->next;
+        }
+
+        dequeuedStudent = traversalStudentWaiting->next;
+        traversalStudentWaiting->next = NULL;
+    }
+
+    return dequeuedStudent;
 }
 
 
