@@ -159,7 +159,7 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
 //  STUDENT THREAD
 void * student()
 {
-    pid_t threadId = pthread_self();
+    pthread_t threadId = pthread_self();
 
     printf("Student Id %d\n", threadId);//threadId);
 
