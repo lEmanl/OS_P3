@@ -14,14 +14,15 @@
 // STRUCTS
 struct StudentNode {
     pthread_t threadId;
-    pthread_t tutorThreadId;
     int priority;
     sem_t * studentWaiting;
     struct StudentNode * next;
 };
 
 struct StudentWaiting {
-    struct StudentNode * student;
+    pthread_t threadId;
+    int priority;
+    sem_t * studentWaiting;
     struct StudentWaiting * next;
 };
 
@@ -98,7 +99,7 @@ void enqueueToStudentWaitingQueue(struct StudentWaiting * studentWaitingToQueue)
         //  find the node to insert before
         while(traversalStudentWaiting != NULL) {
             //  if the node had less than or equal to priority
-            if(traversalStudentWaiting->student->priority > studentWaitingToQueue->student->priority) {
+            if(traversalStudentWaiting->priority > studentWaitingToQueue->priority) {
                 previousTraversalStudentWaiting = traversalStudentWaiting;
                 traversalStudentWaiting = traversalStudentWaiting->next;
             } else {
@@ -131,10 +132,12 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
     //  if the head is the only item in the list
     } else if(studentWaitingQueueHead->next == NULL) {
         dequeuedStudent = studentWaitingQueueHead;
+        //free(studentWaitingQueueHead);
         studentWaitingQueueHead = NULL;
     //  if there are only 2 items in the list
     } else if(studentWaitingQueueHead->next->next == NULL) {
         dequeuedStudent = studentWaitingQueueHead->next;
+        //free(studentWaitingQueueHead->next);
         studentWaitingQueueHead->next = NULL;
     //  if the queue is not empty
     } else {
@@ -143,6 +146,8 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
         }
 
         dequeuedStudent = traversalStudentWaiting->next;
+
+        //free(traversalStudentWaiting->next);
         traversalStudentWaiting->next = NULL;
     }
 
@@ -209,7 +214,8 @@ void * studentThread(void * arg)
 void *coordinatorThread()
 {
     pthread_t nextStudentToQueue;
-    struct StudentNode * nextStudentNode;
+    struct StudentWaiting * nextStudentWaiting;
+    struct StudentNode * nextStudentWaitingNode;
 
     int count = 10;
     int counter = 0;
@@ -228,12 +234,15 @@ void *coordinatorThread()
         //  NOTIFIES student that they were received
         sem_post(&receivedStudentToQueue);
 
-        nextStudentNode = findInAllStudents(nextStudentToQueue);
+        nextStudentWaitingNode = findInAllStudents(nextStudentToQueue);
+        nextStudentWaiting = malloc(sizeof(struct StudentWaiting));
+        nextStudentWaiting->studentWaiting = nextStudentWaitingNode->studentWaiting;
+        nextStudentWaiting->priority = nextStudentWaitingNode->priority;
 
         //  LOCK on the queue of students
         sem_wait(&mutexStudentWaitingQueue);
-        enqueueToStudentWaitingQueue(nextStudentNode);
-        printf("Co: Student %ul with priority %d in the queue. Waiting students now = %d. Total requests = %d\n", nextStudentToQueue, nextStudentNode->priority, 0, 0);
+        enqueueToStudentWaitingQueue(nextStudentWaiting);
+        printf("Co: Student %ul with priority %d in the queue. Waiting students now = %d. Total requests = %d\n", nextStudentToQueue, nextStudentWaiting->priority, 0, 0);
         sem_post(&mutexStudentWaitingQueue);
 
         //  NOTIFIES tutors that there is another student to tutor
@@ -249,7 +258,8 @@ void *coordinatorThread()
 void *tutorThread()
 {
     pthread_t tutorThreadId = pthread_self();
-    struct StudentNode * studentNode;
+    struct StudentWaiting * studentWaitingNode;
+    sem_t * studentWaiting;
 
     //  WAITING for student to tutor
     printf("Tutor: waiting for coordinator\n");
@@ -258,12 +268,14 @@ void *tutorThread()
     //  LOCK on the queue of students
     sem_wait(&mutexStudentWaitingQueue);
     printf("Tutor: dequeueing student\n");
-    studentNode = dequeueFromStudentWaitingQueue();
+    studentWaitingNode = dequeueFromStudentWaitingQueue();
+    studentWaiting = studentWaitingNode->studentWaiting;
+    // free(studentWaitingNode);
     sem_post(&mutexStudentWaitingQueue);
 
     //  Tutor student
-    sem_post(studentNode->studentWaiting);
-    printf("Tu: Student %ul tutored by Tutor \n", studentNode->threadId, tutorThreadId);
+    sem_post(studentWaiting);
+    printf("Tu: Student %ul tutored by Tutor \n", studentWaitingNode->, tutorThreadId);
 }
 
 
