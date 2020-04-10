@@ -300,6 +300,8 @@ void tutor(struct StudentNode * studentNode)
 
     sleep(.2);  
 
+    printf("Tu: Student %ul tutored by Tutor %ul. Students tutored now = %d. Total session tutored = %d.\n", studentNode->threadId, studentNode->tutorThreadId, amountOfStudentsBeingTutored, totalStudentsTutored);
+
     //  LOCK amount of students getting tutored
     sem_wait(&mutexAmountOfStudentBeingTutored);
     amountOfStudentsBeingTutored = amountOfStudentsBeingTutored - 1;
@@ -309,10 +311,6 @@ void tutor(struct StudentNode * studentNode)
     sem_wait(&mutexTotalStudentsTutored);
     totalStudentsTutored = totalStudentsTutored + 1;
     sem_post(&mutexTotalStudentsTutored);
-    
-
-    printf("Tu: Student %ul tutored by Tutor %ul. Students tutored now = %d. Total session tutored = %d.\n", studentNode->threadId, studentNode->tutorThreadId, amountOfStudentsBeingTutored, totalStudentsTutored);
-
 }
 
 
