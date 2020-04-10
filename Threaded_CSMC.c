@@ -254,7 +254,7 @@ void *coordinatorThread()
 void *tutorThread()
 {
     struct StudentWaiting * studentWaitingNode;
-    sem_t studentWaiting;
+    sem_t * studentWaiting;
 
     //  WAITING for student to tutor
     printf("Tutor: waiting for coordinator\n");
