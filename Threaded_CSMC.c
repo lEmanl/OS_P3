@@ -91,10 +91,10 @@ void enqueueToStudentWaitingQueue(struct StudentWaiting * studentWaitingToQueue)
     struct StudentWaiting * previousTraversalStudentWaiting = NULL;
     
     //  if the queue is empty and checks if input is not null
-    if(studentWaitingToQueue != NULL && studentWaitingQueueHead == NULL) {
+    if(studentWaitingQueueHead == NULL) {
         studentWaitingQueueHead = studentWaitingToQueue;
         studentWaitingQueueHead->next = NULL;
-	traversalStudentWaiting = studentWaitingQueueHead;
+	// traversalStudentWaiting = studentWaitingQueueHead;
     //  if the queue is not empty
     } else {
         //  find the node to insert before
@@ -169,12 +169,12 @@ void * studentThread(void * arg)
     sem_wait(&mutexChairs);
     if (numberOfChairs < 0)
     {
-        printf("St: Student %ul found no empty chairs. Will try again later.\n", studentThreadId);
+        printf("St: Student %ul found no empty chairs. Will try again later.\n", pthread_self());
         sem_post(&mutexChairs);
         return; 
     }
     numberOfChairs = numberOfChairs - 1;
-    printf("St: Student %ul takes a seat. Empty chairs = %d\n", studentThreadId, numberOfChairs);
+    printf("St: Student %ul takes a seat. Empty chairs = %d\n", pthread_self(), numberOfChairs);
     sem_post(&mutexChairs);
 
 
