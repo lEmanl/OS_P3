@@ -184,6 +184,7 @@ void * studentThread(void * arg)
     sem_wait(&mutexStudentToQueue);
     printf("Student: setting student to queue\n");
     studentToQueue = pthread_self();
+    printf("Student: set student to queue\n");
     sem_post(&mutexStudentToQueue);
     //  NOTIFIES coordinator that student arrived
     sem_post(&coordinatorWaiting);
