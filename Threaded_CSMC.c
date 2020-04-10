@@ -168,46 +168,54 @@ void * studentThread(void * arg)
     struct StudentNode * studentNode= (struct StudentNode *) arg;
     studentNode->threadId = pthread_self();
 
-    //  LOCK to try and enter waiting room
-    sem_wait(&mutexChairs);
-    if (numberOfChairs < 0)
-    {
-        printf("St: Student %ul found no empty chairs. Will try again later.\n", pthread_self());
-        sem_post(&mutexChairs);
-        return; 
-    }
-    numberOfChairs = numberOfChairs - 1;
-    printf("St: Student %ul takes a seat. Empty chairs = %d\n", pthread_self(), numberOfChairs);
-    sem_post(&mutexChairs);
-
-
-    //  LOCK on sharing student arrival
-    sem_wait(&studentArrived);
-    //  LOCK on student to queue
-    sem_wait(&mutexStudentToQueue);
-    studentToQueue = studentNode->threadId;
-    sem_post(&mutexStudentToQueue);
-
-    //  NOTIFIES coordinator that student arrived
-    sem_post(&coordinatorWaiting);
-
-    //  WAITING for coordinator to queue student
-    sem_wait(&receivedStudentToQueue);
-    sem_post(&studentArrived);
-
-    //  Wait for tutor
-    sem_wait(studentNode->studentWaiting);
+    int count = 10;
+    int counter = 0;
     
-    //  LOCK on waiting room chairs
-    sem_wait(&mutexChairs);
-    numberOfChairs = numberOfChairs + 1;
-    sem_post(&mutexChairs);
+    while(counter < count) {
+        //  LOCK to try and enter waiting room
+        sem_wait(&mutexChairs);
+        if (numberOfChairs < 0)
+        {
+            printf("St: Student %ul found no empty chairs. Will try again later.\n", pthread_self());
+            sem_post(&mutexChairs);
+            return; 
+        }
 
-    // Student is getting tutored
-    sleep(.2); 
+        numberOfChairs = numberOfChairs - 1;
+        printf("St: Student %ul takes a seat. Empty chairs = %d\n", pthread_self(), numberOfChairs);
+        sem_post(&mutexChairs);
 
-    // Increment student priotiy
-    studentNode->priority = studentNode->priority + 1;
+
+        //  LOCK on sharing student arrival
+        sem_wait(&studentArrived);
+        //  LOCK on student to queue
+        sem_wait(&mutexStudentToQueue);
+        studentToQueue = studentNode->threadId;
+        sem_post(&mutexStudentToQueue);
+
+        //  NOTIFIES coordinator that student arrived
+        sem_post(&coordinatorWaiting);
+
+        //  WAITING for coordinator to queue student
+        sem_wait(&receivedStudentToQueue);
+        sem_post(&studentArrived);
+
+        //  Wait for tutor
+        sem_wait(studentNode->studentWaiting);
+        
+        //  LOCK on waiting room chairs
+        sem_wait(&mutexChairs);
+        numberOfChairs = numberOfChairs + 1;
+        sem_post(&mutexChairs);
+
+        // Student is getting tutored
+        sleep(.2); 
+
+        // Increment student priotiy
+        studentNode->priority = studentNode->priority + 1;
+
+        counter = counter + 1;
+    }
 }
 
 
@@ -257,27 +265,35 @@ void *tutorThread()
 {
     struct StudentNode * studentNode;
 
-    //  WAITING for student to tutor
-    sem_wait(&tutorWaiting);
+    int count = 10;
+    int counter = 0;
+    
+    while(counter < count) {
+        //  WAITING for student to tutor
+        sem_wait(&tutorWaiting);
 
-    //  LOCK on the queue of students
-    sem_wait(&mutexStudentWaitingQueue);
-    studentNode = dequeueFromStudentWaitingQueue()->student;
-    sem_post(&mutexStudentWaitingQueue);
+        //  LOCK on the queue of students
+        sem_wait(&mutexStudentWaitingQueue);
+        studentNode = dequeueFromStudentWaitingQueue()->student;
+        sem_post(&mutexStudentWaitingQueue);
 
-    //  set the tutor for the student
-    studentNode->tutorThreadId = pthread_self();
+        //  set the tutor for the student
+        studentNode->tutorThreadId = pthread_self();
 
-    //  Tutor student
-    sem_post(studentNode->studentWaiting);
-    tutor(studentNode);
-    sem_post(studentNode->studentWaiting);
+        //  Tutor student
+        sem_post(studentNode->studentWaiting);
+        tutor(studentNode);
+        sem_post(studentNode->studentWaiting);
+
+        counter = counter + 1;
+    }
 }
 
 
 //Student getting tutored
 void tutor(struct StudentNode * studentNode)
 {
+    while()
     //  LOCK amount of students getting tutored
     sem_wait(&mutexAmountOfStudentBeingTutored);
     amountOfStudentsBeingTutored = amountOfStudentsBeingTutored + 1;
@@ -295,7 +311,7 @@ void tutor(struct StudentNode * studentNode)
     totalStudentsTutored = totalStudentsTutored + 1;
     sem_post(&mutexTotalStudentsTutored);
 
-    printf("Tu: Student %ul tutored by Tutor %ul. Students tutored now = %d. Total session tutored%d.\n", studentNode->threadId, studentNode->tutorThreadId, amountOfStudentsBeingTutored, totalStudentsTutored);
+    printf("Tu: Student %ul tutored by Tutor %ul. Students tutored now = %d. Total session tutored = %d.\n", studentNode->threadId, studentNode->tutorThreadId, amountOfStudentsBeingTutored, totalStudentsTutored);
 }
 
 
