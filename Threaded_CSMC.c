@@ -293,7 +293,6 @@ void *tutorThread()
 //Student getting tutored
 void tutor(struct StudentNode * studentNode)
 {
-    while()
     //  LOCK amount of students getting tutored
     sem_wait(&mutexAmountOfStudentBeingTutored);
     amountOfStudentsBeingTutored = amountOfStudentsBeingTutored + 1;
