@@ -159,9 +159,9 @@ struct StudentWaiting * dequeueFromStudentWaitingQueue() {
 //  STUDENT THREAD
 void * student()
 {
-    pthread_t threadId = pthread_self();
+    //pthread_t threadId = pthread_self();
 
-    printf("Student Id %d\n", threadId);//threadId);
+    printf("Student Id %d\n", pthread_self());//threadId);
 
     // //  LOCK to try and enter waiting room
     // sem_wait(&mutexChairs);
