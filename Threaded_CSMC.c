@@ -21,7 +21,7 @@ struct StudentNode {
 struct StudentWaiting {
     sem_t studentWaiting;
     int priority;
-    struct StudentWaitingQueue * next;
+    struct StudentWaiting * next;
 };
 
 
@@ -161,40 +161,40 @@ void * student()
     int studentId = pthread_self();
     printf("Student Id %d", studentId);
 
-    //  LOCK to try and enter waiting room
-    sem_wait(&mutexChairs);
-    if (numberOfChairs < 0)
-    {
-        sem_post(&mutexChairs);
-        return; 
-    }
-    numberOfChairs = numberOfChairs - 1;
-    sem_post(&mutexChairs);
+    // //  LOCK to try and enter waiting room
+    // sem_wait(&mutexChairs);
+    // if (numberOfChairs < 0)
+    // {
+    //     sem_post(&mutexChairs);
+    //     return; 
+    // }
+    // numberOfChairs = numberOfChairs - 1;
+    // sem_post(&mutexChairs);
 
 
-    //  LOCK on sharing student arrival
-    sem_wait(&studentArrived);
-    //  LOCK on student to queue
-    sem_wait(&mutexStudentToQueue);
-    studentToQueue = studentId;
-    sem_post(&mutexStudentToQueue);
-    //  NOTIFIES coordinator that student arrived
-    sem_post(&coordinatorWaiting);
-    //  WAITING for coordinator to queue student
-    sem_wait(&receivedStudentToQueue);
-    sem_post(&studentArrived);
+    // //  LOCK on sharing student arrival
+    // sem_wait(&studentArrived);
+    // //  LOCK on student to queue
+    // sem_wait(&mutexStudentToQueue);
+    // studentToQueue = studentId;
+    // sem_post(&mutexStudentToQueue);
+    // //  NOTIFIES coordinator that student arrived
+    // sem_post(&coordinatorWaiting);
+    // //  WAITING for coordinator to queue student
+    // sem_wait(&receivedStudentToQueue);
+    // sem_post(&studentArrived);
 
-    //  Wait for tutor
-    //  sem_wait();
+    // //  Wait for tutor
+    // //  sem_wait();
 
-    //  LOCK on waiting room chairs
-    sem_wait(&mutexChairs);
-    numberOfChairs = numberOfChairs + 1;
-    sem_post(&mutexChairs);
+    // //  LOCK on waiting room chairs
+    // sem_wait(&mutexChairs);
+    // numberOfChairs = numberOfChairs + 1;
+    // sem_post(&mutexChairs);
 
-    //  Get tutored
+    // //  Get tutored
 
-    //  Change priority
+    // //  Change priority
 }
 
 
@@ -251,6 +251,7 @@ int main(int argc, char *argv[])
     int numberOfStudents;
     int numberOfTutors;
     int numberOfHelp;
+    void * value;
     long i;
 
     //Casts arguments into integer and returns error if no digits are passed
@@ -276,7 +277,14 @@ int main(int argc, char *argv[])
     //Creates student threads
     for(i = 0; i < numberOfStudents; i++)
     {
-        printf("Thread Id %d", (pthread_create(&students[i], NULL, student, (void *) i)));
+        assert(pthread_create(&students[i], NULL, student, (void *) i) == 0);
+        printf("Thread Id %d", &students[i]);
+    }
+
+    //Join student threads
+    for(i = 0; i < numberOfStudents; i++)
+    {
+        assert(pthread_join(&students[i], &value) == 0);
     }
 
     /*
