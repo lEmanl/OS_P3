@@ -378,7 +378,7 @@ int main(int argc, char *argv[])
         //  add student to list of students
         studentToAdd = malloc(sizeof(struct StudentNode));
         studentToAdd->priority = 0;
-        studentToAdd->studentWaiting = studentWaiting;
+        studentToAdd->studentWaiting = *studentWaiting;
 
         assert(pthread_create(&students[i], NULL, studentThread, (void *) studentToAdd) == 0);
 
