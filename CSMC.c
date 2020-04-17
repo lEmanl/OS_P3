@@ -288,7 +288,7 @@ void *tutorThread()
         //  Tutor student
         sem_post(studentNode->studentWaiting);
         tutor(studentNode);
-        sem_post(studentNode->studentWaiting);
+        //  sem_post(studentNode->studentWaiting);
     }
 }
 
